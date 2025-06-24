@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: theme('colors.secondary.50');
+  color: theme('colors.secondary.900');
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: theme('colors.secondary.100');
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.secondary.300');
+  border-radius: 4px;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* Modern card shadow utility */
+.card-shadow {
+  @apply shadow-soft rounded-xl bg-white;
+}
+
+/* Animation utility */
+.animate-fade-in {
+  @apply animate-fade-in;
+} 
