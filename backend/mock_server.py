@@ -54,20 +54,30 @@ class WebhookEndpointRequest(BaseModel):
 
 # Initialize mock data
 def initialize_mock_data():
-    """Initialize mock data for development"""
+    """Initialize mock data for development with realistic values"""
     global mock_transactions, mock_metrics, mock_webhook_events
-    
-    # Generate mock transactions
+    merchant_names = [
+        "Amazon", "Visa", "Starbucks", "Apple", "Netflix", "Uber", "Delta Airlines", "Walmart", "Target", "Shell Oil"
+    ]
+    card_brands = ["Visa", "Mastercard", "Amex", "Discover"]
+    descriptions = [
+        "Online purchase", "Coffee shop", "Subscription renewal", "Flight booking", "Grocery shopping",
+        "Fuel purchase", "Electronics", "Streaming service", "Ride share", "Retail store"
+    ]
     for i in range(50):
+        merchant = merchant_names[i % len(merchant_names)]
+        card_brand = card_brands[i % len(card_brands)]
         transaction = {
             "transaction_id": f"txn_{uuid.uuid4().hex[:16]}",
             "type": random.choice(["authorization", "capture", "refund"]),
-            "amount": random.randint(1000, 1000000),  # $10 to $10,000
+            "amount": random.randint(500, 50000),  # $5 to $500
             "currency": "USD",
             "status": random.choice(["approved", "completed", "failed"]),
-            "merchant_id": f"merchant_{random.randint(1, 10)}",
+            "merchant_id": merchant.lower().replace(" ", "_"),
+            "merchant_name": merchant,
+            "card_brand": card_brand,
             "created_at": (datetime.utcnow() - timedelta(days=random.randint(0, 30))).isoformat(),
-            "description": f"Payment for order #{random.randint(1000, 9999)}"
+            "description": random.choice(descriptions)
         }
         mock_transactions.append(transaction)
     
@@ -196,6 +206,19 @@ async def capture_payment(request: TransactionRequest, x_idempotency_key: str = 
 @app.post("/payments/refund")
 async def refund_payment(request: TransactionRequest, x_idempotency_key: str = Header(...)):
     return await create_transaction(request)
+
+# --- ALIAS ROUTES for frontend compatibility ---
+@app.get("/metrics")
+async def get_metrics_alias():
+    return await get_metrics()
+
+@app.get("/transactions")
+async def get_transactions_alias():
+    return await get_transactions()
+
+@app.get("/webhooks/events")
+async def get_webhook_events_alias():
+    return await get_webhook_events()
 
 if __name__ == "__main__":
     import uvicorn
