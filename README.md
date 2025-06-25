@@ -1,6 +1,6 @@
 # 🚀 Serverless Payments Sandbox
 
-A production-grade serverless payment processing platform built with AWS and modern web technologies. Designed to impress fintech recruiters and hiring managers at Amazon, Visa, and beyond.
+A production-grade serverless payment processing platform built with AWS and modern web technologies.
 
 ---
 
@@ -34,7 +34,7 @@ This project demonstrates a complete, modern payment processing system with:
 
 ## 🚀 Quick Start
 
-### Local Development (Recommended)
+### Local Development
 
 1. **Clone the repository**
    ```bash
@@ -58,21 +58,6 @@ This project demonstrates a complete, modern payment processing system with:
    - Health Check: http://localhost:3000/health
 
 > **Note:** In local development, the mock server provides realistic, professional-quality fake data for all API endpoints. The frontend interacts with `/transactions`, `/metrics`, and `/webhooks/events` (aliased to mock data), so the experience matches production.
-
-### AWS Deployment
-
-1. **Prerequisites**
-   - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed
-   - AWS credentials configured (`aws configure`)
-
-2. **Deploy to AWS**
-   ```bash
-   ./deploy.sh
-   ```
-   This will:
-   - Deploy complete AWS infrastructure (API Gateway, Lambda, DynamoDB, SNS)
-   - Configure the frontend to use real AWS API endpoints
-   - Output deployment information
 
 ---
 
@@ -271,15 +256,11 @@ curl -X POST http://localhost:3000/payments/authorize \
 2. **API Connection Issues**
    - Ensure the mock server is running: `http://localhost:3000/health`
    - Verify environment variables in `.env`
-3. **AWS Deployment Issues**
-   - Ensure AWS CLI is configured: `aws configure`
-   - Check AWS permissions
-   - Review CloudFormation logs
-4. **Port Conflicts**
+3. **Port Conflicts**
    - Mock server: Port 3000
    - Frontend: Port 5173 (auto-increments if busy)
    - Change ports in scripts if needed
-5. **Deprecation Warnings**
+4. **Deprecation Warnings**
    - You may see warnings from FastAPI or Python about deprecated features (e.g., `on_event`, `datetime.utcnow()`). These do not affect local development or demo functionality.
 
 ---
@@ -313,4 +294,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Built with ❤️ for Amazon, Visa, and the fintech community.**
+**Built with ❤️ for the fintech community.**
