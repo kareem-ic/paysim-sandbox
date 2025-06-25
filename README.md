@@ -1,184 +1,309 @@
-# Serverless Payments Sandbox
+# 🚀 Serverless Payments Sandbox
 
-A production-grade REST API sandbox that simulates card authorizations, captures, and refunds—complete with idempotency keys, rate-limits, and webhook callbacks—built entirely on Python + AWS with a modern React frontend.
+A production-grade serverless payment processing platform built with AWS and modern web technologies. Perfect for demonstrating fintech expertise to Amazon and Visa hiring managers.
 
-## 🎯 Project Vision
+## 🎯 Project Overview
 
-**One-Sentence Pitch**: "A public REST sandbox that lets developers simulate card authorizations, captures, and refunds—complete with idempotency keys, rate-limits, and webhook callbacks—built entirely on Python + AWS."
+This project showcases a complete payment processing system with:
 
-### Why This Resonates with Target Companies
-
-| Company | What They Care About | How This Project Proves You "Get It" |
-|---------|---------------------|--------------------------------------|
-| **Amazon** | • Low-latency, failure-resilient APIs<br>• Event-driven, serverless design<br>• Cost optimisation | Hit P95 < 50ms on Lambda; use CDK for IaC; show CloudWatch cost alarms |
-| **Visa** | • Payments semantics (auth/capture/refund)<br>• PCI-grade security practices<br>• Dispute & idempotency logic | Implements ISO-style flows + HMAC webhook signatures; unit-tests idempotency |
+- **AWS Serverless Architecture**: Lambda, API Gateway, DynamoDB, SNS, CloudWatch
+- **Modern Frontend**: React + TypeScript + Tailwind CSS + Radix UI
+- **Production Features**: Idempotency, webhooks, monitoring, load testing
+- **Developer Experience**: Local development, testing, CI/CD ready
 
 ## 🏗️ Architecture
 
 ```
-┌───────────────┐  POST /authorize /capture /refund
-│ API Gateway   │  ──────────────────────────────────►
-└──────┬────────┘           Lambda (FastAPI)
-       │                        │
-       │   PutItem / UpdateItem │
-       ▼                        ▼  Publish
-┌────────────────────────────┐  ┌──────────────────┐
-│ DynamoDB PaymentsLedger    │  │ SNS WebhookTopic │──► Client URL
-│  - PK: transaction_id      │  └──────────────────┘
-│  - GSI: card_id            │
-└────────────────────────────┘
-             ▲
-             │ Trigger (nightly)
-             │
-     ┌──────────────────┐
-     │ Step Functions   │—simulates T+1 settlement→ updates ledger, fires webhook
-     └──────────────────┘
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React App     │    │   API Gateway   │    │   Lambda        │
+│   (Frontend)    │◄──►│   (REST API)    │◄──►│   (FastAPI)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                       │
+                                ▼                       ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │   DynamoDB      │    │   SNS Topics    │
+                       │   (Transactions)│    │   (Webhooks)    │
+                       └─────────────────┘    └─────────────────┘
 ```
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Payment Operations
-- **Authorization Workflow**: Amount validation, returns auth_id in < 50ms
-- **Capture & Refund**: Validates original auth, enforces amount ≤ authorized
-- **Idempotency**: X-Idempotency-Key header prevents duplicate transactions
-- **Webhook Simulation**: 200ms average delivery via SNS → HTTPS endpoints
+### Option 1: Local Development (Recommended)
 
-### Production-Grade Features
-- **Rate Limiting**: API Gateway usage plans (100 req/min)
-- **Error Handling**: 400 (bad request), 409 (conflict), 500 (internal)
-- **Observability**: CloudWatch dashboard with TPS, P95, 4xx/5xx metrics
-- **Security**: HMAC SHA-256 webhook signatures with KMS-encrypted secrets
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd paysim-sandbox
+   ```
 
-### Frontend Dashboard
-- **Real-time Transaction Monitoring**: Live feed of payment operations
-- **Metrics Visualization**: Charts showing TPS, latency, error rates
-- **Webhook Testing Interface**: Simulate and monitor webhook deliveries
-- **API Documentation**: Interactive OpenAPI/Swagger UI
+2. **Run the development environment**
+   ```bash
+   ./dev.sh
+   ```
 
-## 🛠️ Tech Stack
+   This will:
+   - Install all dependencies
+   - Start the mock API server on `http://localhost:3000`
+   - Start the frontend on `http://localhost:5173`
+   - Open API documentation at `http://localhost:3000/docs`
 
-### Backend (AWS Serverless)
-- **Python 3.12** with FastAPI inside Lambda
-- **AWS CDK** for Infrastructure as Code
-- **DynamoDB** single-table design with TTL
-- **API Gateway** with usage plans & API keys
-- **SNS** for webhook delivery
-- **Step Functions** for settlement simulation
-- **CloudWatch** for monitoring & alerting
+3. **Access the application**
+   - Frontend: http://localhost:5173
+   - API Docs: http://localhost:3000/docs
+   - Health Check: http://localhost:3000/health
 
-### Frontend (React)
-- **React 18** with TypeScript
-- **Vite** for fast development
-- **Tailwind CSS** + Radix UI components
-- **React Query** for API state management
-- **React Router** for navigation
-- **Recharts** for data visualization
+### Option 2: AWS Deployment
 
-### DevOps
-- **GitHub Actions** for CI/CD
-- **Pytest** for backend testing
-- **Locust** for load testing
-- **AWS SSM Parameter Store** for secrets
+1. **Prerequisites**
+   ```bash
+   # Install AWS CLI
+   curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+   sudo installer -pkg AWSCLIV2.pkg -target /
+   
+   # Configure AWS credentials
+   aws configure
+   ```
+
+2. **Deploy to AWS**
+   ```bash
+   ./deploy.sh
+   ```
+
+   This will:
+   - Deploy complete AWS infrastructure
+   - Create API Gateway, Lambda, DynamoDB, SNS
+   - Configure frontend with real API endpoints
+   - Output deployment information
 
 ## 📁 Project Structure
 
 ```
-serverless-payments-sandbox/
-├── frontend/                 # React TypeScript frontend
+paysim-sandbox/
+├── frontend/                 # React + TypeScript frontend
 │   ├── src/
-│   │   ├── components/       # UI components
+│   │   ├── api/             # API client and hooks
+│   │   ├── components/      # Reusable UI components
 │   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── types/           # TypeScript definitions
-│   │   └── utils/           # Utility functions
-│   └── package.json
-├── backend/                  # Python AWS backend
-│   ├── cdk/                 # AWS CDK stacks
-│   ├── src/                 # Lambda functions
-│   ├── tests/               # Unit tests
-│   └── requirements.txt
-├── load_tests/              # Performance testing
-├── docs/                    # Documentation
+│   │   └── types/           # TypeScript type definitions
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/                  # AWS backend
+│   ├── cdk/                 # Infrastructure as Code
+│   │   ├── app.py           # CDK application
+│   │   └── context.json     # CDK context
+│   ├── src/
+│   │   └── handler.py       # Lambda function (FastAPI)
+│   ├── mock_server.py       # Local development server
+│   ├── requirements.txt     # Python dependencies
+│   └── tests/               # Unit tests
+├── deploy.sh                # AWS deployment script
+├── dev.sh                   # Local development script
 └── README.md
 ```
 
-## 🚀 Getting Started
+## 🛠️ Features
+
+### Frontend Features
+- **Dashboard**: Real-time metrics and charts
+- **Transactions**: Search, filter, and view payment history
+- **Webhooks**: Manage webhook endpoints and view events
+- **API Documentation**: Interactive API docs
+- **Responsive Design**: Mobile-friendly interface
+
+### Backend Features
+- **Payment Processing**: Authorization, capture, refund
+- **Idempotency**: Prevents duplicate transactions
+- **Webhooks**: Real-time event notifications
+- **Monitoring**: CloudWatch dashboards and metrics
+- **Security**: API key authentication, input validation
+- **Load Testing**: Locust-based performance testing
+
+### AWS Services Used
+- **Lambda**: Serverless compute
+- **API Gateway**: REST API management
+- **DynamoDB**: NoSQL database
+- **SNS**: Event messaging
+- **CloudWatch**: Monitoring and logging
+- **CDK**: Infrastructure as Code
+
+## 🔧 Development
 
 ### Frontend Development
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Backend Deployment
+### Backend Development
+
 ```bash
 cd backend
 pip install -r requirements.txt
-cdk deploy --all
+python3 mock_server.py
+```
+
+### Running Tests
+
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Frontend tests
+cd frontend
+npm test
 ```
 
 ### Load Testing
+
 ```bash
-cd load_tests
-locust -f locustfile.py --host=http://localhost:8000
+cd backend/load_tests
+locust -f locustfile.py --host=http://localhost:3000
 ```
 
-## 📊 Success Metrics
+## 📊 API Endpoints
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **Latency** | P95 < 50ms | CloudWatch metrics |
-| **Throughput** | 5K TPS sustained | Locust load tests |
-| **Cost** | < $10/month | AWS Cost Explorer |
-| **Uptime** | 99.9% | CloudWatch alarms |
-| **Test Coverage** | > 90% | Pytest coverage |
+### Payment Endpoints
+- `POST /payments/authorize` - Authorize a payment
+- `POST /payments/capture` - Capture an authorized payment
+- `POST /payments/refund` - Refund a captured payment
 
-## 🎯 MVP Scope (3-Day Build)
+### Mock Endpoints (Development)
+- `GET /mock/transactions` - Get mock transactions
+- `GET /mock/metrics` - Get mock metrics
+- `GET /mock/webhooks` - Get mock webhook events
+- `POST /mock/webhook-endpoints` - Create webhook endpoint
 
-### Day 1: Infrastructure
-- [ ] CDK skeleton: API Gateway, Lambda, DynamoDB
-- [ ] Basic FastAPI endpoints (empty responses)
-- [ ] GitHub Actions CI/CD pipeline
+### Health Check
+- `GET /health` - Service health status
 
-### Day 2: Core Payment Logic
-- [ ] Implement `/authorize` endpoint with idempotency
-- [ ] DynamoDB single-table design
-- [ ] Unit tests for payment flows
+## 🔐 Security
 
-### Day 3: Production Features
-- [ ] Add `/capture` and `/refund` endpoints
-- [ ] SNS webhook delivery system
-- [ ] CloudWatch dashboard and monitoring
-- [ ] Frontend dashboard integration
+- **API Key Authentication**: Required for all payment endpoints
+- **Idempotency Keys**: Prevents duplicate transactions
+- **Input Validation**: Pydantic models for request validation
+- **CORS Configuration**: Proper cross-origin settings
+- **HTTPS Only**: In production environments
 
-## 🔒 Security & Compliance
+## 📈 Monitoring
 
-- **PCI DSS Awareness**: Implements security best practices
-- **Idempotency**: Prevents duplicate transaction processing
-- **Rate Limiting**: Protects against abuse
-- **Audit Trail**: Complete transaction logging
-- **Encryption**: KMS-encrypted secrets and data at rest
+- **CloudWatch Dashboards**: Real-time metrics
+- **API Gateway Metrics**: Request count, latency, errors
+- **Lambda Metrics**: Invocations, duration, errors
+- **Custom Metrics**: Transaction volume, success rates
 
-## 📈 Monitoring & Observability
+## 🚀 Deployment
 
-- **Real-time Metrics**: TPS, latency, error rates
-- **Cost Alerts**: Budget notifications for dev environment
-- **Error Tracking**: Detailed logging and alerting
-- **Performance Monitoring**: P95, P99 latency tracking
+### Local Development
+```bash
+./dev.sh
+```
+
+### AWS Production
+```bash
+./deploy.sh
+```
+
+### Manual AWS Deployment
+```bash
+cd backend/cdk
+cdk deploy
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+cd backend
+pytest tests/
+```
+
+### Load Tests
+```bash
+cd backend/load_tests
+locust -f locustfile.py
+```
+
+### API Tests
+```bash
+# Test the API endpoints
+curl -X POST http://localhost:3000/payments/authorize \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: test-key-123" \
+  -d '{
+    "amount": 1000,
+    "currency": "USD",
+    "merchant_id": "merchant_123",
+    "description": "Test payment"
+  }'
+```
+
+## 📝 Environment Variables
+
+### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:3000
+VITE_API_KEY=mock-api-key-for-development
+```
+
+### Backend (Lambda Environment)
+```env
+PAYMENTS_TABLE=payments-ledger
+WEBHOOK_TOPIC_ARN=arn:aws:sns:...
+POWERTOOLS_SERVICE_NAME=payments-api
+LOG_LEVEL=INFO
+```
 
 ## 🤝 Contributing
 
-This project demonstrates enterprise-level software engineering practices including:
-- Infrastructure as Code
-- Serverless architecture
-- Event-driven design
-- Comprehensive testing
-- Production monitoring
-- Security best practices
-
-Perfect for showcasing skills to companies like Amazon, Visa, Stripe, and other fintech leaders.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
 ## 📄 License
 
-MIT License - Feel free to use this as a portfolio project or learning resource.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Build Errors**
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   ```
+
+2. **API Connection Issues**
+   - Check if mock server is running: `http://localhost:3000/health`
+   - Verify environment variables in `.env`
+
+3. **AWS Deployment Issues**
+   - Ensure AWS CLI is configured: `aws configure`
+   - Check AWS permissions
+   - Review CloudFormation logs
+
+4. **Port Conflicts**
+   - Mock server: Port 3000
+   - Frontend: Port 5173
+   - Change ports in scripts if needed
+
+## 🎯 Next Steps
+
+- [ ] Add user authentication
+- [ ] Implement real payment processor integration
+- [ ] Add more comprehensive testing
+- [ ] Set up CI/CD pipeline
+- [ ] Add database migrations
+- [ ] Implement rate limiting
+- [ ] Add audit logging
+- [ ] Create mobile app
+
+---
+
+**Built with ❤️ for Amazon and Visa hiring managers**

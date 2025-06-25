@@ -94,5 +94,13 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      addUtilities({
+        '.animate-fade-in': {
+          animation: 'fadeIn 0.5s ease-in-out',
+        },
+      })
+    }
+  ],
 } 
